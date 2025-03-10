@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayEase - Simple Payment App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        .qr-code {
+            background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 
+                        50%/20px 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm p-4 fixed bottom-0 w-full">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <button onclick="showScreen('home')" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="bi bi-house text-xl"></i>
+                <span class="text-xs mt-1">Home</span>
+            </button>
+            <button onclick="showScreen('send')" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="bi bi-send text-xl"></i>
+                <span class="text-xs mt-1">Send</span>
+            </button>
+            <button onclick="showScreen('scan')" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="bi bi-qr-code text-xl"></i>
+                <span class="text-xs mt-1">Scan</span>
+            </button>
+            <button onclick="showScreen('history')" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="bi bi-clock-history text-xl"></i>
+                <span class="text-xs mt-1">History</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Screens -->
+    <main class="pb-20 max-w-md mx-auto">
+        <!-- Home Screen -->
+        <section id="home" class="screen active p-4">
+            <div class="bg-blue-600 text-white rounded-xl p-6 mb-6">
+                <h1 class="text-2xl font-semibold mb-2">Welcome to PayEase</h1>
+                <p class="text-sm opacity-90">Your Balance</p>
+                <p class="text-3xl font-bold mb-4">€1,234.56</p>
+            </div>
+
+            <div class="bg-yellow-100 p-4 rounded-lg mb-6">
+                <p class="text-yellow-800 font-medium">🎉 Earn €5 on your first 3 payments!</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="showScreen('send')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                    <i class="bi bi-send text-2xl text-blue-600 mb-2"></i>
+                    <p class="font-medium">Send Money</p>
+                </button>
+                <button onclick="showScreen('scan')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                    <i class="bi bi-qr-code text-2xl text-blue-600 mb-2"></i>
+                    <p class="font-medium">Scan QR</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- Send Money Screen -->
+        <section id="send" class="screen p-4">
+            <h2 class="text-2xl font-semibold mb-6">Send Money</h2>
+            <form onsubmit="handleSendMoney(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Recipient</label>
+                    <input type="text" placeholder="Mobile number or IBAN" class="w-full p-3 border rounded-lg" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount (€)</label>
+                    <input type="number" placeholder="0.00" class="w-full p-3 border rounded-lg" required min="0.01" step="0.01">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700">
+                    Send Payment
+                </button>
+            </form>
+        </section>
+
+        <!-- Scan QR Screen -->
+        <section id="scan" class="screen p-4">
+            <h2 class="text-2xl font-semibold mb-6">Scan QR Code</h2>
+            <div class="aspect-square max-w-xs mx-auto mb-6">
+                <div class="qr-code w-full h-full rounded-xl"></div>
+            </div>
+            <div class="text-center">
+                <button onclick="handleScanQR()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700">
+                    Scan Code
+                </button>
+            </div>
+        </section>
+
+        <!-- Transaction History Screen -->
+        <section id="history" class="screen p-4">
+            <h2 class="text-2xl font-semibold mb-6">Transaction History</h2>
+            <div class="space-y-4" id="transactionList">
+                <!-- Transactions will be inserted here -->
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Mock transaction data
+        let transactions = [
+            { type: 'sent', amount: 10, recipient: 'John Doe', date: '12 Oct 2023' },
+            { type: 'paid', amount: 5.50, recipient: 'Café', date: '11 Oct 2023' },
+            { type: 'sent', amount: 25, recipient: 'Jane Smith', date: '10 Oct 2023' }
+        ];
+
+        // Screen navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Handle send money
+        function handleSendMoney(event) {
+            event.preventDefault();
+            const amount = event.target.elements[1].value;
+            const recipient = event.target.elements[0].value;
+            
+            // Add to transactions
+            transactions.unshift({
+                type: 'sent',
+                amount: parseFloat(amount),
+                recipient: recipient,
+                date: new Date().toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                })
+            });
+
+            alert(`€${amount} sent to ${recipient}`);
+            event.target.reset();
+            updateTransactionHistory();
+        }
+
+        // Handle QR scan
+        function handleScanQR() {
+            const amount = 5.50;
+            const recipient = 'Café';
+            
+            transactions.unshift({
+                type: 'paid',
+                amount: amount,
+                recipient: recipient,
+                date: new Date().toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                })
+            });
+
+            alert(`Payment of €${amount} to ${recipient} successful`);
+            updateTransactionHistory();
+        }
+
+        // Update transaction history
+        function updateTransactionHistory() {
+            const transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = transactions.map(transaction => `
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-medium">${transaction.type === 'sent' ? 'Sent to' : 'Paid to'} ${transaction.recipient}</p>
+                            <p class="text-sm text-gray-500">${transaction.date}</p>
+                        </div>
+                        <p class="font-semibold text-${transaction.type === 'sent' ? 'red' : 'green'}-600">
+                            €${transaction.amount.toFixed(2)}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initial transaction history update
+        updateTransactionHistory();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
